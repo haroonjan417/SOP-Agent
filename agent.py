@@ -30,33 +30,25 @@ def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/opena
         verbose=True
     )
     
-    task = Task(
+    sop_task = Task(
         description=f"""
 The following operational incident was reported:
 '{clean_incident}'
 
 Follow this exact sequence:
 1. Use the 'SOP Policy Search Tool' to retrieve relevant procedures for this incident.
-2. Use the 'Action Checklist Generator' to turn retrieved guidelines into a structured task list.
-3. Use the 'Operational Artifact Drafter' to prepare draft communications or tickets.
-4. Consolidate everything into a clear executive response for human approval.
+2. Identify and explicitly state the specific SOP document name (e.g., '[Document Source: Warehouse_SOP.pdf]') and section from which the retrieved policies originate.
+3. Use the 'Action Checklist Generator' to turn retrieved guidelines into a structured task list.
+4. Use the 'Operational Artifact Drafter' to prepare draft communications or tickets.
+5. Consolidate everything into a clear executive response for human approval.
 """,
-        expected_output="A structured report containing: 1) Applicable SOP Summary, 2) Departmental Action Checklist, and 3) Pre-filled Operational Drafts.",
+        expected_output="A structured report containing: 1) Cited SOP Document Name & Summary, 2) Departmental Action Checklist, and 3) Pre-filled Operational Drafts.",
         agent=sop_agent
     )
-    eval_task = Task(
-    description=(
-        "1. Search the uploaded SOP vector store for relevant policies regarding: '{user_incident}'.\n"
-        "2. Identify the specific SOP document name (e.g. '[Document Source: Warehouse_SOP.pdf]') from which the policies originate.\n"
-        "3. Explicitly state which document and section applied to this incident before proceeding to generate the checklist and response."
-    ),
-    expected_output="An analysis citing the relevant SOP document name, followed by the operational action plan.",
-    agent=sop_evaluator_agent,
-)
     
     crew = Crew(
         agents=[sop_agent],
-        tasks=[task],
+        tasks=[sop_task],
         process=Process.sequential
     )
     
