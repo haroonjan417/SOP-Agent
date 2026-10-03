@@ -12,13 +12,12 @@ with st.sidebar:
     st.header("Configuration")
     groq_api_key = st.text_input("Groq API Key", type="password", help="Get your free key from console.groq.com")
     
-    # Recommended free Groq models
+    # Active Groq Models
     selected_model = st.selectbox(
         "Groq Model",
         [
-            "groq/llama-3.3-70b-versatile",
-            "groq/llama3-70b-8192",
-            "groq/mixtral-8x7b-32768"
+            "groq/openai/gpt-oss-120b",
+            "groq/openai/gpt-oss-20b"
         ]
     )
 
