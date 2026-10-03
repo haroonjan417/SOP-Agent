@@ -13,7 +13,7 @@ def sanitize_text(text: str) -> str:
     """Removes non-ASCII characters to prevent LiteLLM/Groq encoding issues."""
     return text.encode("ascii", "ignore").decode("ascii")
 
-def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/llama-3.3-70b-versatile"):
+def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/openai/gpt-oss-120b"):
     clean_incident = sanitize_text(user_incident)
     
     llm = LLM(
