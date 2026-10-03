@@ -44,6 +44,15 @@ Follow this exact sequence:
         expected_output="A structured report containing: 1) Applicable SOP Summary, 2) Departmental Action Checklist, and 3) Pre-filled Operational Drafts.",
         agent=sop_agent
     )
+    eval_task = Task(
+    description=(
+        "1. Search the uploaded SOP vector store for relevant policies regarding: '{user_incident}'.\n"
+        "2. Identify the specific SOP document name (e.g. '[Document Source: Warehouse_SOP.pdf]') from which the policies originate.\n"
+        "3. Explicitly state which document and section applied to this incident before proceeding to generate the checklist and response."
+    ),
+    expected_output="An analysis citing the relevant SOP document name, followed by the operational action plan.",
+    agent=sop_evaluator_agent,
+)
     
     crew = Crew(
         agents=[sop_agent],
