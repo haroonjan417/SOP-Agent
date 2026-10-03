@@ -1,7 +1,8 @@
 from crewai import Agent, Task, Crew, Process, LLM
 from tools import sop_search_rag, generate_action_checklist, draft_operational_artifacts
 
-def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/openai/gpt-oss-120b"):
+def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/llama-3.3-70b-versatile"):
+    # LiteLLM uses 'groq/model_id' format
     llm = LLM(
         model=model_name,
         api_key=api_key
