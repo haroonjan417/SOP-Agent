@@ -2,7 +2,11 @@ import os
 from crewai import Agent, Task, Crew, Process, LLM
 from tools import sop_search_rag, generate_action_checklist, draft_operational_artifacts
 
-# Ensure environment uses UTF-8 encoding
+# --- FIX FOR GROQ CACHE BREAKPOINT ERROR ---
+import crewai.llms.cache as _crewai_cache
+_crewai_cache.mark_cache_breakpoint = lambda msg: msg
+# -------------------------------------------
+
 os.environ["PYTHONIOENCODING"] = "utf-8"
 
 def sanitize_text(text: str) -> str:
@@ -10,7 +14,6 @@ def sanitize_text(text: str) -> str:
     return text.encode("ascii", "ignore").decode("ascii")
 
 def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/llama-3.3-70b-versatile"):
-    # Clean non-ASCII characters from input prompt
     clean_incident = sanitize_text(user_incident)
     
     llm = LLM(
