@@ -5,12 +5,21 @@ from agent import run_sop_crew
 st.set_page_config(page_title="AI SOP Operations Agent", page_icon="⚙️", layout="wide")
 
 st.title("⚙️ AI SOP-to-Action Business Process Agent")
-st.caption("Powered by CrewAI, Groq API (openai/gpt-oss-120b), RAG, and Streamlit")
+st.caption("Powered by CrewAI, Groq API, RAG, and Streamlit")
 
 with st.sidebar:
     st.header("Configuration")
     groq_api_key = st.text_input("Groq API Key", type="password", help="Get your free key from console.groq.com")
-    selected_model = st.text_input("Model ID", value="groq/openai/gpt-oss-120b")
+    
+    # Recommended free Groq models
+    selected_model = st.selectbox(
+        "Groq Model",
+        [
+            "groq/llama-3.3-70b-versatile",
+            "groq/llama3-70b-8192",
+            "groq/mixtral-8x7b-32768"
+        ]
+    )
 
 st.markdown("### Report an Operational Incident")
 st.info("Example: *'5 crates of raw material arrived damaged at Loading Bay 2. Packaging is ruptured.'*")
