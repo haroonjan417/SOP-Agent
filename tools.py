@@ -7,40 +7,55 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 
 _vectorstore = None
 
-def build_vectorstore_from_file(uploaded_file):
-    """Processes any PDF/TXT uploaded by the user into ChromaDB."""
+def build_vectorstore_from_files(uploaded_files):
+    """Processes multiple PDFs/TXTs uploaded by the user into a single ChromaDB vector store."""
     global _vectorstore
-    
-    # Save uploaded bytes to a temporary file
-    suffix = ".pdf" if uploaded_file.name.endswith(".pdf") else ".txt"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
-        tmp_file.write(uploaded_file.getvalue())
-        tmp_path = tmp_file.name
+    all_docs = []
 
-    # Load documents based on file type
-    if suffix == ".pdf":
-        loader = PyPDFLoader(tmp_path)
-    else:
-        loader = TextLoader(tmp_path)
+    for uploaded_file in uploaded_files:
+        suffix = ".pdf" if uploaded_file.name.endswith(".pdf") else ".txt"
         
-    docs = loader.load()
-    os.remove(tmp_path)  # Cleanup temp file
+        # Write temporary file for loader
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+            tmp_path = tmp_file.name
 
-    # Embed and build local vector store
+        # Load file contents
+        if suffix == ".pdf":
+            loader = PyPDFLoader(tmp_path)
+            docs = loader.load()
+        else:
+            loader = TextLoader(tmp_path)
+            docs = loader.load()
+
+        os.remove(tmp_path)  # Cleanup temp file
+
+        # Inject original filename into metadata for dynamic provenance tracking
+        for doc in docs:
+            doc.metadata["source_filename"] = uploaded_file.name
+
+        all_docs.extend(docs)
+
+    # Embed and initialize/rebuild vectorstore
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    _vectorstore = Chroma.from_documents(docs, embeddings)
-    return True
+    _vectorstore = Chroma.from_documents(all_docs, embeddings)
+    return len(uploaded_files)
 
 @tool("SOP Policy Search Tool")
 def sop_search_rag(incident_description: str) -> str:
-    """Retrieves relevant Standard Operating Procedures (SOPs) based on the incident description."""
+    """Retrieves relevant Standard Operating Procedures (SOPs) based on the incident description, including the source document name."""
     global _vectorstore
     if _vectorstore is None:
-        return "No uploaded SOP found. Please upload an SOP document first."
+        return "No uploaded SOP found. Please upload at least one SOP document."
         
-    results = _vectorstore.similarity_search(incident_description, k=2)
-    policies = "\n\n".join([doc.page_content for doc in results])
-    return f"Retrieved SOP Guidance:\n{policies}"
+    results = _vectorstore.similarity_search(incident_description, k=4)
+    
+    retrieved_chunks = []
+    for doc in results:
+        source_doc = doc.metadata.get("source_filename", "Unknown Document")
+        retrieved_chunks.append(f"--- [Document Source: {source_doc}] ---\n{doc.page_content}")
+        
+    return "Retrieved SOP Guidance:\n" + "\n\n".join(retrieved_chunks)
 
 @tool("Action Checklist Generator")
 def generate_action_checklist(sop_guidelines: str) -> str:
