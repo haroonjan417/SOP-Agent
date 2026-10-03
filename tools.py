@@ -4,6 +4,23 @@ from crewai.tools import tool
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from duckduckgo_search import DDGS
+
+@tool("Web Search Fallback Tool")
+def web_search_tool(query: str) -> str:
+    """Performs a web search to retrieve general industry standards, safety procedures, and solutions when internal SOPs are unavailable."""
+    try:
+        results = []
+        with DDGS() as ddgs:
+            # Perform text search via pure Python API call
+            for r in ddgs.text(query, max_results=3):
+                results.append(f"Title: {r['title']}\nSnippet: {r['body']}\nURL: {r['href']}")
+        
+        if results:
+            return "\n\n".join(results)
+        return "No web search results found for this issue."
+    except Exception as e:
+        return f"Web search error: {str(e)}"
 
 _vectorstore = None
 
