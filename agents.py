@@ -1,12 +1,10 @@
-from crewai import Agent
-from langchain_groq import ChatGroq
+from crewai import Agent, LLM
 
-def create_policy_analyst(groq_api_key: str, model_name: str = "openai/gpt-oss-120b") -> Agent:
-    """Agent specialized in SOP retrieval analysis and compliance auditing."""
-    llm = ChatGroq(
-        temperature=0.1,
-        groq_api_key=groq_api_key,
-        model_name=model_name
+def create_policy_analyst(groq_api_key: str, model_name: str = "groq/openai/gpt-oss-120b") -> Agent:
+    """Agent focused on compliance auditing and SOP source citation."""
+    llm = LLM(
+        model=model_name,
+        api_key=groq_api_key
     )
     return Agent(
         role="Senior SOP Policy & Compliance Analyst",
@@ -21,12 +19,11 @@ def create_policy_analyst(groq_api_key: str, model_name: str = "openai/gpt-oss-1
         llm=llm
     )
 
-def create_operations_orchestrator(groq_api_key: str, model_name: str = "openai/gpt-oss-120b") -> Agent:
-    """Agent specialized in action planning, checklist generation, and artifact drafting."""
-    llm = ChatGroq(
-        temperature=0.2,
-        groq_api_key=groq_api_key,
-        model_name=model_name
+def create_operations_orchestrator(groq_api_key: str, model_name: str = "groq/openai/gpt-oss-120b") -> Agent:
+    """Agent focused on converting findings into checklists and artifact drafts."""
+    llm = LLM(
+        model=model_name,
+        api_key=groq_api_key
     )
     return Agent(
         role="Lead Operations & Execution Orchestrator",
