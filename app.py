@@ -4,6 +4,16 @@ import streamlit as st
 from crewai import Agent, Task, Crew, LLM
 from tools import build_vectorstore_from_files, search_sop_database
 
+# Clean and validate the key input
+clean_api_key = groq_api_key.strip().replace('"', '').replace("'", "")
+
+if not clean_api_key.startswith("gsk_"):
+    st.error("Invalid key format. Groq API keys must start with 'gsk_'.")
+    st.stop()
+
+# Set environment variable so LiteLLM reads it directly
+os.environ["GROQ_API_KEY"] = clean_api_key
+
 # Prevent LiteLLM from sending unsupported parameters (like cache_breakpoint) to Groq
 litellm.drop_params = True
 
@@ -54,8 +64,8 @@ if user_query:
             try:
                 # Configure Single LLM instance
                 groq_llm = LLM(
-                    model="groq/llama-3.3-70b-versatile",
-                    api_key=groq_api_key,
+                    model="openai/gpt-oss-120b",
+                    api_key=clean_api_key,
                     drop_params=True
                 )
 
