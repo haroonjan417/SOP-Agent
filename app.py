@@ -67,11 +67,24 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* Cards / Container Boxes */
+    /* Cards & Input Area Styling */
     div[data-testid="stExpander"], div.stTextArea {
         background-color: #1E293B;
         border-radius: 10px;
         border: 1px solid #334155;
+    }
+
+    /* --- FIX: FORCE INPUT TEXT TO BE VISIBLE --- */
+    div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
+        color: #FFFFFF !important;
+        background-color: #1E293B !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+
+    /* Placeholder Text Visibility */
+    div[data-baseweb="textarea"] textarea::placeholder {
+        color: #94A3B8 !important;
+        -webkit-text-fill-color: #94A3B8 !important;
     }
 
     /* Primary Action Buttons */
