@@ -67,8 +67,7 @@ if user_query:
                 # Configure Single LLM instance
                 groq_llm = LLM(
                     model="openai/gpt-oss-120b",
-                    api_key=clean_api_key,
-                    drop_params=True
+                    api_key=clean_api_key
                 )
 
                 # Single Unified SOP Agent
