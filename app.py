@@ -4,6 +4,8 @@ import streamlit as st
 from crewai import Agent, Task, Crew, LLM
 from tools import build_vectorstore_from_files, search_sop_database
 
+groq_api_key = st.secrets.get("GROQ_API_KEY", "").strip() or st.sidebar.text_input("Groq API Key", type="password")
+
 # Clean and validate the key input
 clean_api_key = groq_api_key.strip().replace('"', '').replace("'", "")
 
