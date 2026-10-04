@@ -1,7 +1,7 @@
 from crewai import Task, Crew, Process
 from agents import create_policy_analyst, create_operations_orchestrator
 
-def run_sop_multi_agent_workflow(user_incident: str, sop_context: str, api_key: str, model_name: str = "llama-3.3-70b-versatile"):
+def run_sop_multi_agent_workflow(user_incident: str, sop_context: str, api_key: str, model_name: str = "openai/gpt-oss-120b"):
     """Orchestrates the sequential multi-agent execution pipeline."""
     
     # Instantiate agents
