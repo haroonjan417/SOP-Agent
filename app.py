@@ -10,81 +10,83 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS for Modern Dark/Light Orange Vibe
+# Custom CSS for Modern Bright / Light Theme with Orange Accents
 st.markdown("""
 <style>
-    /* Main Background & Text Color */
+    /* Main Background & Text Color - Clean Light Neutral */
     .stApp {
-        background-color: #0F172A;
-        color: #F8FAFC;
+        background-color: #F8FAFC;
+        color: #0F172A;
     }
     
-    /* Sidebar Styling */
+    /* Sidebar Styling - Crisp Slate Light */
     section[data-testid="stSidebar"] {
-        background-color: #1E293B;
-        border-right: 1px solid #334155;
+        background-color: #F1F5F9;
+        border-right: 1px solid #E2E8F0;
     }
     
-    /* Headers & Title Accent - Light Orange / Amber Gradient */
+    /* Headers & Title Accent - Vibrant Orange/Amber Gradient */
     h1, h2, h3 {
-        color: #F8FAFC !important;
+        color: #0F172A !important;
         font-family: 'Inter', sans-serif;
     }
     
     .stTitle {
-        background: linear-gradient(90deg, #FF8C00 0%, #FFA500 50%, #FFC107 100%);
+        background: linear-gradient(90deg, #EA580C 0%, #F97316 50%, #F59E0B 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
         margin-bottom: 0px;
     }
     
-    /* Main Banner Team Card Styling with Orange Highlights */
+    /* Main Banner Team Card Styling - Light Card with Orange Highlight */
     .hero-team-card {
-        background-color: #1E293B;
-        border: 1px solid #FF8C00;
+        background-color: #FFFFFF;
+        border: 1px solid #FFEDD5;
+        border-left: 4px solid #F97316;
         border-radius: 10px;
         padding: 16px 20px;
         margin-top: 10px;
         margin-bottom: 25px;
-        box-shadow: 0 4px 12px rgba(255, 140, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(249, 115, 22, 0.08);
     }
     .hero-leader {
-        color: #FF9800;
+        color: #C2410C;
         font-size: 0.95rem;
         font-weight: 700;
         margin-bottom: 6px;
     }
     .hero-leader span {
-        color: #F8FAFC;
+        color: #0F172A;
         font-weight: 600;
     }
     .hero-members {
-        color: #94A3B8;
+        color: #475569;
         font-size: 0.9rem;
     }
     .hero-members span {
-        color: #CBD5E1;
+        color: #334155;
         font-weight: 500;
     }
 
-    /* Cards & Input Area Styling */
+    /* Cards & Input Area Styling - High Contrast Light Surfaces */
     div[data-testid="stExpander"], div.stTextArea {
-        background-color: #1E293B;
+        background-color: #FFFFFF;
         border-radius: 10px;
-        border: 1px solid #334155;
+        border: 1px solid #E2E8F0;
     }
 
-    /* Force Input Text to be Visible (White Text on Dark Field) */
+    /* Force Input Text Visibility (Dark Text on Clean White Background) */
     div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
-        color: #FFFFFF !important;
-        background-color: #1E293B !important;
-        -webkit-text-fill-color: #FFFFFF !important;
+        color: #0F172A !important;
+        background-color: #FFFFFF !important;
+        -webkit-text-fill-color: #0F172A !important;
     }
 
     /* Input Focus Outline - Vibrant Orange */
     div[data-baseweb="textarea"]:focus-within, div[data-baseweb="input"]:focus-within {
-        border-color: #FF8C00 !important;
+        border-color: #F97316 !important;
+        box-shadow: 0 0 0 1px #F97316 !important;
     }
 
     /* Placeholder Text Visibility */
@@ -95,7 +97,7 @@ st.markdown("""
 
     /* Primary Action Buttons - Light Orange to Amber Gradient */
     div.stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, #FF8C00 0%, #FF7A00 100%);
+        background: linear-gradient(90deg, #F97316 0%, #EA580C 100%);
         color: #FFFFFF;
         border: none;
         border-radius: 8px;
@@ -104,10 +106,10 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     div.stButton > button[kind="primary"]:hover {
-        background: linear-gradient(90deg, #FF9800 0%, #FF8C00 100%);
+        background: linear-gradient(90deg, #FB923C 0%, #F97316 100%);
         opacity: 0.95;
         transform: translateY(-1px);
-        box-shadow: 0 4px 14px rgba(255, 140, 0, 0.3);
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
     }
 </style>
 """, unsafe_allow_html=True)
