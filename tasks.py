@@ -24,6 +24,7 @@ def run_sop_agent_workflow(
     llm = LLM(
         model=model_name,
         api_key=api_key
+        temperature=0.2
     )
 
     # ---------------------------------------------------------
