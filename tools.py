@@ -4,13 +4,14 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import FastEmbedEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 DB_DIR = "./chroma_sop_db"
 vectorstore = None
 
 def get_embeddings():
-    """Initializes CPU-friendly, lightweight embeddings."""
-    return FastEmbedEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+    """Uses local HuggingFace BGE embeddings (lightweight CPU model)."""
+    return HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 
 def build_vectorstore_from_files(uploaded_files) -> int:
     """Chunks uploaded PDF/TXT files and indices them into ChromaDB."""
