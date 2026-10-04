@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS for Modern Dark/Indigo Vibe
+# Custom CSS for Modern Dark/Light Orange Vibe
 st.markdown("""
 <style>
     /* Main Background & Text Color */
@@ -25,31 +25,32 @@ st.markdown("""
         border-right: 1px solid #334155;
     }
     
-    /* Headers & Title Accent */
+    /* Headers & Title Accent - Light Orange / Amber Gradient */
     h1, h2, h3 {
         color: #F8FAFC !important;
         font-family: 'Inter', sans-serif;
     }
     
     .stTitle {
-        background: linear-gradient(90deg, #6366F1 0%, #A855F7 100%);
+        background: linear-gradient(90deg, #FF8C00 0%, #FFA500 50%, #FFC107 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
         margin-bottom: 0px;
     }
     
-    /* Main Banner Team Card Styling */
+    /* Main Banner Team Card Styling with Orange Highlights */
     .hero-team-card {
         background-color: #1E293B;
-        border: 1px solid #334155;
+        border: 1px solid #FF8C00;
         border-radius: 10px;
         padding: 16px 20px;
         margin-top: 10px;
         margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(255, 140, 0, 0.1);
     }
     .hero-leader {
-        color: #818CF8;
+        color: #FF9800;
         font-size: 0.95rem;
         font-weight: 700;
         margin-bottom: 6px;
@@ -74,11 +75,16 @@ st.markdown("""
         border: 1px solid #334155;
     }
 
-    /* --- FIX: FORCE INPUT TEXT TO BE VISIBLE --- */
+    /* Force Input Text to be Visible (White Text on Dark Field) */
     div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
         color: #FFFFFF !important;
         background-color: #1E293B !important;
         -webkit-text-fill-color: #FFFFFF !important;
+    }
+
+    /* Input Focus Outline - Vibrant Orange */
+    div[data-baseweb="textarea"]:focus-within, div[data-baseweb="input"]:focus-within {
+        border-color: #FF8C00 !important;
     }
 
     /* Placeholder Text Visibility */
@@ -87,9 +93,9 @@ st.markdown("""
         -webkit-text-fill-color: #94A3B8 !important;
     }
 
-    /* Primary Action Buttons */
+    /* Primary Action Buttons - Light Orange to Amber Gradient */
     div.stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%);
+        background: linear-gradient(90deg, #FF8C00 0%, #FF7A00 100%);
         color: #FFFFFF;
         border: none;
         border-radius: 8px;
@@ -98,8 +104,10 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     div.stButton > button[kind="primary"]:hover {
-        opacity: 0.9;
+        background: linear-gradient(90deg, #FF9800 0%, #FF8C00 100%);
+        opacity: 0.95;
         transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(255, 140, 0, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
