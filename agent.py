@@ -2,7 +2,6 @@ import os
 from crewai import Agent, Task, Crew, Process, LLM
 from tools import (
     sop_search_rag, 
-    web_search_tool, 
     generate_action_checklist, 
     draft_operational_artifacts
 )
@@ -27,14 +26,13 @@ def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/opena
     )
     
     sop_agent = Agent(
-        role="Operations & Facilities Incident Manager",
-        goal="Resolve operational incidents using internal SOPs if available, or fall back to web search and general industry best practices.",
+        role="Operations SOP and Execution Manager",
+        goal="Analyze incidents using internal SOP tools and generate actionable resolution workflows.",
         backstory=(
-            "An expert operational manager specializing in logistics, facility maintenance, compliance, and automated risk response. "
-            "You prioritize internal company SOPs. If internal SOPs do not cover an incident, you search the web "
-            "and apply standard industrial/safety best practices to provide immediate, actionable guidance."
+            "An expert operational manager specializing in logistics, compliance, and automated risk response. "
+            "You rely strictly on company SOPs and domain knowledge to formulate operational procedures."
         ),
-        tools=[sop_search_rag, web_search_tool, generate_action_checklist, draft_operational_artifacts],
+        tools=[sop_search_rag, generate_action_checklist, draft_operational_artifacts],
         llm=llm,
         verbose=True
     )
@@ -44,22 +42,18 @@ def run_sop_crew(user_incident: str, api_key: str, model_name: str = "groq/opena
 The following operational incident was reported:
 '{clean_incident}'
 
-Follow this decision hierarchy:
-1. Search internal SOPs using 'SOP Policy Search Tool'.
-2. IF internal SOP guidance IS FOUND:
-   - Explicitly cite the document name (e.g., '[Document Source: Warehouse_SOP.pdf]') and section.
-3. IF internal SOP guidance IS NOT FOUND or insufficient:
-   - Explicitly note: "No specific internal SOP found for this issue. Falling back to general industry standards and web search."
-   - Use 'Web Search Fallback Tool' to retrieve safety and troubleshooting guidelines for the issue.
-4. Convert the retrieved guidance into an operational checklist and draft communications using the available tools.
+Follow this exact sequence:
+1. Use the 'SOP Policy Search Tool' to retrieve relevant procedures for this incident.
+2. Identify and explicitly state the specific SOP document name (e.g., '[Document Source: Warehouse_SOP.pdf]') and section from which the retrieved policies originate.
+3. Use the 'Action Checklist Generator' to turn retrieved guidelines into a structured task list.
+4. Use the 'Operational Artifact Drafter' to prepare draft communications or tickets.
 5. Consolidate everything into a clear executive response for human approval.
 """,
         expected_output=(
             "A structured report containing: "
-            "1) Source Identification (Internal SOP Name OR Industry Best Practice Fallback), "
-            "2) Immediate Action & Safety Steps, "
-            "3) Action Checklist, and "
-            "4) Pre-filled Operational Drafts/Tickets."
+            "1) Cited SOP Document Name & Summary, "
+            "2) Departmental Action Checklist, and "
+            "3) Pre-filled Operational Drafts."
         ),
         agent=sop_agent
     )
