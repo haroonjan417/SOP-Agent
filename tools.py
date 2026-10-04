@@ -1,105 +1,85 @@
 import os
 import tempfile
-from crewai.tools import tool
+from typing import List
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from duckduckgo_search import DDGS
+from langchain_community.embeddings import FastEmbedEmbeddings
 
-@tool("Web Search Fallback Tool")
-def web_search_tool(query: str) -> str:
-    """Performs a web search to retrieve general industry standards, safety procedures, and solutions when internal SOPs are unavailable."""
-    try:
-        results = []
-        with DDGS() as ddgs:
-            # Perform text search via pure Python API call
-            for r in ddgs.text(query, max_results=3):
-                results.append(f"Title: {r['title']}\nSnippet: {r['body']}\nURL: {r['href']}")
-        
-        if results:
-            return "\n\n".join(results)
-        return "No web search results found for this issue."
-    except Exception as e:
-        return f"Web search error: {str(e)}"
+# Global or persistent Chroma DB path
+DB_DIR = "./chroma_sop_db"
+vectorstore = None
 
-_vectorstore = None
+def get_embeddings():
+    """Initializes lightweight, local CPU embeddings without external API costs."""
+    return FastEmbedEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 
-def build_vectorstore_from_files(uploaded_files):
-    """Processes multiple PDFs/TXTs uploaded by the user into a single ChromaDB vector store."""
-    global _vectorstore
-    all_docs = []
+def build_vectorstore_from_files(uploaded_files) -> int:
+    """Processes uploaded PDF and TXT files, chunks text, and stores vectors in ChromaDB."""
+    global vectorstore
+    documents = []
 
     for uploaded_file in uploaded_files:
-        suffix = ".pdf" if uploaded_file.name.endswith(".pdf") else ".txt"
-        
-        # Write temporary file for loader
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+        # Create a temporary file to save uploaded content
+        file_extension = os.path.splitext(uploaded_file.name)[1].lower()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_path = tmp_file.name
 
-        # Load file contents
-        if suffix == ".pdf":
-            loader = PyPDFLoader(tmp_path)
+        try:
+            if file_extension == ".pdf":
+                loader = PyPDFLoader(tmp_path)
+            elif file_extension == ".txt":
+                loader = TextLoader(tmp_path, encoding="utf-8")
+            else:
+                continue
+
             docs = loader.load()
-        else:
-            loader = TextLoader(tmp_path)
-            docs = loader.load()
+            # Attach source metadata to each document chunk
+            for doc in docs:
+                doc.metadata["source_name"] = uploaded_file.name
+            documents.extend(docs)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
-        os.remove(tmp_path)  # Cleanup temp file
+    if not documents:
+        return 0
 
-        # Inject original filename into metadata for dynamic provenance tracking
-        for doc in docs:
-            doc.metadata["source_filename"] = uploaded_file.name
+    # Split documents into optimal chunks for RAG
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+    chunks = text_splitter.split_documents(documents)
 
-        all_docs.extend(docs)
-
-    # Embed and initialize/rebuild vectorstore
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    _vectorstore = Chroma.from_documents(all_docs, embeddings)
+    # Initialize Chroma vector store with chunked documents
+    embeddings = get_embeddings()
+    vectorstore = Chroma.from_documents(
+        documents=chunks,
+        embedding=embeddings,
+        persist_directory=DB_DIR
+    )
     return len(uploaded_files)
 
-@tool("SOP Policy Search Tool")
-def sop_search_rag(incident_description: str) -> str:
-    """Retrieves relevant Standard Operating Procedures (SOPs) based on the incident description, including the source document name."""
-    global _vectorstore
-    if _vectorstore is None:
-        return "No uploaded SOP found. Please upload at least one SOP document."
-        
-    results = _vectorstore.similarity_search(incident_description, k=4)
+def query_sop_vectorstore(query: str, k: int = 3) -> str:
+    """Retrieves relevant SOP chunks from ChromaDB formatted with exact document citations."""
+    global vectorstore
+
+    # Load existing vector database if not in memory
+    if vectorstore is None:
+        if os.path.exists(DB_DIR):
+            embeddings = get_embeddings()
+            vectorstore = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
+        else:
+            return "No SOP documents indexed in the vector store yet. Please upload SOPs first."
+
+    # Perform similarity search
+    results = vectorstore.similarity_search(query, k=k)
     
-    retrieved_chunks = []
-    for doc in results:
-        source_doc = doc.metadata.get("source_filename", "Unknown Document")
-        retrieved_chunks.append(f"--- [Document Source: {source_doc}] ---\n{doc.page_content}")
-        
-    return "Retrieved SOP Guidance:\n" + "\n\n".join(retrieved_chunks)
+    if not results:
+        return "No relevant SOP procedures found matching this incident."
 
-@tool("Action Checklist Generator")
-def generate_action_checklist(sop_guidelines: str) -> str:
-    """Transforms SOP policy guidelines into a structured operational checklist with departments and priority levels."""
-    return """
---- OPERATIONAL ACTION CHECKLIST ---
-[HIGH PRIORITY] Step 1: Move items to Quarantine Zone Bay Q (Owner: Warehouse Ops)
-[HIGH PRIORITY] Step 2: Document damage with photos and log in QA Portal (Owner: Quality Assurance)
-[MEDIUM PRIORITY] Step 3: Issue Supplier Non-Conformance Report (Owner: Procurement)
-[LOW PRIORITY] Step 4: Adjust ERP Inventory Levels (Owner: Inventory Management)
-"""
+    formatted_context = []
+    for i, doc in enumerate(results, 1):
+        source = doc.metadata.get("source_name", "Uploaded_SOP_Document")
+        formatted_context.append(f"--- SOP Chunk {i} [Document Source: {source}] ---\n{doc.page_content}")
 
-@tool("Operational Artifact Drafter")
-def draft_operational_artifacts(action_context: str) -> str:
-    """Drafts ready-to-send communications, supplier emails, and internal ERP ticket texts."""
-    return """
---- DRAFT SUPPLIER NON-CONFORMANCE EMAIL ---
-To: supplier-claims@vendor.com
-Subject: URGENT: Notice of Damaged Shipment - SOP Non-Conformance
-
-Dear Supplier Team,
-
-Upon receipt of shipment today, damage was detected during receiving inspection. 
-In accordance with official company SOP, the shipment has been placed in quarantine.
-
-Action Required: Please review attached evidence and provide return/replacement authorization within 24 hours.
-
-Regards,
-Operations Management Team
-"""
+    return "\n\n".join(formatted_context)
