@@ -1,10 +1,9 @@
 from crewai import Task, Crew, Process
 from agents import create_policy_analyst, create_operations_orchestrator
 
-def run_sop_multi_agent_workflow(user_incident: str, sop_context: str, api_key: str, model_name: str = "openai/gpt-oss-120b"):
-    """Orchestrates the sequential multi-agent execution pipeline."""
+def run_sop_multi_agent_workflow(user_incident: str, sop_context: str, api_key: str, model_name: str = "groq/openai/gpt-oss-120b"):
+    """Executes the two-agent sequential workflow."""
     
-    # Instantiate agents
     policy_analyst = create_policy_analyst(api_key, model_name)
     operations_orchestrator = create_operations_orchestrator(api_key, model_name)
 
@@ -35,7 +34,6 @@ def run_sop_multi_agent_workflow(user_incident: str, sop_context: str, api_key: 
         agent=operations_orchestrator
     )
 
-    # Crew Execution Pipeline
     crew = Crew(
         agents=[policy_analyst, operations_orchestrator],
         tasks=[policy_task, orchestration_task],
