@@ -70,7 +70,7 @@ with st.sidebar:
 
     selected_model = st.selectbox(
         "Groq Model",
-        ["groq/openai/gpt-oss-120b", "groq/llama-3.3-70b-versatile"]
+        ["groq/openai/gpt-oss-120b"]
     )
     
     st.markdown("---")
