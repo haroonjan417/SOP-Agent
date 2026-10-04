@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from tools import build_vectorstore_from_files, query_sop_vectorstore
-from tasks import run_sop_multi_agent_workflow
+from tasks import run_sop_agent_workflow
 
 # Page Config & Bright Theme Styling
 st.set_page_config(page_title="AI SOP Operations Agent", page_icon="⚡", layout="wide")
@@ -45,7 +45,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ AI SOP Operations Agent")
-st.caption("Powered by CrewAI Multi-Agent System, Groq API & Streamlit")
+st.caption("Powered by CrewAI Sinle Agent System, Groq API & Streamlit")
 
 st.markdown("""
 <div class="hero-team-card">
@@ -99,10 +99,10 @@ if st.button("Analyze & Generate Action Plan", type="primary"):
     elif not user_incident.strip():
         st.warning("Please provide an incident description.")
     else:
-        with st.spinner("Multi-Agent System evaluating incident..."):
+        with st.spinner("Single Agent System evaluating incident..."):
             try:
                 retrieved_context = query_sop_vectorstore(user_incident)
-                result = run_sop_multi_agent_workflow(
+                result = run_sop_agent_workflow(
                     user_incident=user_incident,
                     sop_context=retrieved_context,
                     api_key=groq_api_key,
