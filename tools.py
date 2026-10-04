@@ -1,26 +1,23 @@
 import os
 import tempfile
-from typing import List
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import FastEmbedEmbeddings
 
-# Global or persistent Chroma DB path
 DB_DIR = "./chroma_sop_db"
 vectorstore = None
 
 def get_embeddings():
-    """Initializes lightweight, local CPU embeddings without external API costs."""
+    """Initializes CPU-friendly, lightweight embeddings."""
     return FastEmbedEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 
 def build_vectorstore_from_files(uploaded_files) -> int:
-    """Processes uploaded PDF and TXT files, chunks text, and stores vectors in ChromaDB."""
+    """Chunks uploaded PDF/TXT files and indices them into ChromaDB."""
     global vectorstore
     documents = []
 
     for uploaded_file in uploaded_files:
-        # Create a temporary file to save uploaded content
         file_extension = os.path.splitext(uploaded_file.name)[1].lower()
         with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
@@ -35,7 +32,6 @@ def build_vectorstore_from_files(uploaded_files) -> int:
                 continue
 
             docs = loader.load()
-            # Attach source metadata to each document chunk
             for doc in docs:
                 doc.metadata["source_name"] = uploaded_file.name
             documents.extend(docs)
@@ -46,11 +42,9 @@ def build_vectorstore_from_files(uploaded_files) -> int:
     if not documents:
         return 0
 
-    # Split documents into optimal chunks for RAG
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
     chunks = text_splitter.split_documents(documents)
 
-    # Initialize Chroma vector store with chunked documents
     embeddings = get_embeddings()
     vectorstore = Chroma.from_documents(
         documents=chunks,
@@ -60,18 +54,16 @@ def build_vectorstore_from_files(uploaded_files) -> int:
     return len(uploaded_files)
 
 def query_sop_vectorstore(query: str, k: int = 3) -> str:
-    """Retrieves relevant SOP chunks from ChromaDB formatted with exact document citations."""
+    """Queries ChromaDB and returns relevant chunks with source document names."""
     global vectorstore
 
-    # Load existing vector database if not in memory
     if vectorstore is None:
         if os.path.exists(DB_DIR):
             embeddings = get_embeddings()
             vectorstore = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
         else:
-            return "No SOP documents indexed in the vector store yet. Please upload SOPs first."
+            return "No SOP documents indexed in the vector store yet."
 
-    # Perform similarity search
     results = vectorstore.similarity_search(query, k=k)
     
     if not results:
