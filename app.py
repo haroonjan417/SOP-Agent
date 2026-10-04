@@ -1,115 +1,93 @@
 import os
+import litellm
 import streamlit as st
-from tools import build_vectorstore_from_files, query_sop_vectorstore
-from tasks import run_sop_agent_workflow
+from crewai import Agent, Task, Crew, LLM
+from tools import build_vectorstore_from_files, search_sop_database
 
-# Page Config & Bright Theme Styling
-st.set_page_config(page_title="AI SOP Operations Agent", page_icon="⚡", layout="wide")
+# Prevent LiteLLM from sending unsupported parameters (like cache_breakpoint) to Groq
+litellm.drop_params = True
 
-st.markdown("""
-<style>
-    .stApp { background-color: #F8FAFC; color: #0F172A; }
-    section[data-testid="stSidebar"] { background-color: #F1F5F9; border-right: 1px solid #E2E8F0; }
-    h1, h2, h3 { color: #0F172A !important; font-family: 'Inter', sans-serif; }
-    .stTitle {
-        background: linear-gradient(90deg, #EA580C 0%, #F97316 50%, #F59E0B 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-    }
-    .hero-team-card {
-        background-color: #FFFFFF;
-        border: 1px solid #FFEDD5;
-        border-left: 4px solid #F97316;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-top: 10px;
-        margin-bottom: 25px;
-    }
-    .hero-leader { color: #C2410C; font-size: 0.95rem; font-weight: 700; }
-    .hero-leader span { color: #0F172A; font-weight: 600; }
-    .hero-members { color: #475569; font-size: 0.9rem; }
-    .hero-members span { color: #334155; font-weight: 500; }
-    div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
-        color: #0F172A !important;
-        background-color: #FFFFFF !important;
-        -webkit-text-fill-color: #0F172A !important;
-    }
-    div.stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, #F97316 0%, #EA580C 100%);
-        color: #FFFFFF;
-        border: none;
-        border-radius: 8px;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="SOP Assistant", layout="wide")
+st.title("📄 Single-Agent SOP Assistant")
 
-st.title("⚡ AI SOP Operations Agent")
-st.caption("Powered by CrewAI Sinle Agent System, Groq API & Streamlit")
-
-st.markdown("""
-<div class="hero-team-card">
-    <div class="hero-leader">👑 Team Leader: <span>Masood ur Rahman</span></div>
-    <div class="hero-members">🤝 Team Members: <span>M Haroon Jan &nbsp;•&nbsp; Fatima Ijaz &nbsp;•&nbsp; Aslam Afridi &nbsp;•&nbsp; Shakeel Ahmad &nbsp;•&nbsp; Sami Ur Rahman</span></div>
-</div>
-""", unsafe_allow_html=True)
-
-if "indexed_files_count" not in st.session_state:
-    st.session_state["indexed_files_count"] = 0
-if "indexed_file_names" not in st.session_state:
-    st.session_state["indexed_file_names"] = []
-
-groq_api_key = st.secrets.get("GROQ_API_KEY", "").strip()
-
+# Sidebar - Indexing
 with st.sidebar:
-    st.header("⚙️ Configuration")
-    if not groq_api_key:
-        groq_api_key = st.text_input("Groq API Key", type="password")
-    else:
-        st.success("Groq API Key loaded securely")
+    st.header("SOP Document Indexer")
+    groq_api_key = st.text_input("Groq API Key", type="password")
+    uploaded_sops = st.file_uploader("Upload SOP Files", type=["pdf", "txt"], accept_multiple_files=True)
+    index_button = st.button("Index SOPs")
 
-    selected_model = st.selectbox(
-        "Groq Model",
-        ["groq/openai/gpt-oss-120b"]
-    )
-    
-    st.markdown("---")
-    st.header("📁 SOP Knowledge Base")
-    uploaded_sops = st.file_uploader("Upload Company SOPs (PDF/TXT)", type=["pdf", "txt"], accept_multiple_files=True)
-
-    if uploaded_sops:
-        if st.button("Index / Reload SOP Knowledge Base"):
-            with st.spinner("Indexing uploaded SOP documents..."):
+    if index_button:
+        if not uploaded_sops:
+            st.warning("Please upload at least one file.")
+        else:
+            with st.spinner("Processing and indexing SOP documents..."):
                 count = build_vectorstore_from_files(uploaded_sops)
-                st.session_state["indexed_files_count"] = count
-                st.session_state["indexed_file_names"] = [f.name for f in uploaded_sops]
-                st.success(f"Successfully indexed {count} document(s)!")
+                if count > 0:
+                    st.success(f"Successfully indexed {count} SOP document(s)!")
+                else:
+                    st.error("Failed to index uploaded documents.")
 
-    if st.session_state["indexed_files_count"] > 0:
-        st.markdown("**Active SOPs:**")
-        for fname in st.session_state["indexed_file_names"]:
-            st.markdown(f"- `{fname}`")
+# Initialize chat session
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-st.markdown("### 🚨 Report an Operational Incident")
-user_incident = st.text_area("Describe the operational issue or event:", height=120)
+# Display conversation history
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-if st.button("Analyze & Generate Action Plan", type="primary"):
+# User Chat Input
+user_query = st.chat_input("Ask a question about your indexed SOPs...")
+
+if user_query:
     if not groq_api_key:
-        st.error("Missing Groq API key.")
-    elif not user_incident.strip():
-        st.warning("Please provide an incident description.")
-    else:
-        with st.spinner("Single Agent System evaluating incident..."):
+        st.error("Please provide a Groq API Key in the sidebar.")
+        st.stop()
+
+    st.session_state.messages.append({"role": "user", "content": user_query})
+    with st.chat_message("user"):
+        st.markdown(user_query)
+
+    with st.chat_message("assistant"):
+        with st.spinner("Analyzing SOPs..."):
             try:
-                retrieved_context = query_sop_vectorstore(user_incident)
-                result = run_sop_agent_workflow(
-                    user_incident=user_incident,
-                    sop_context=retrieved_context,
+                # Configure Single LLM instance
+                groq_llm = LLM(
+                    model="groq/llama-3.3-70b-versatile",
                     api_key=groq_api_key,
-                    model_name=selected_model
+                    drop_params=True
                 )
-                st.success("Action Plan Ready for Approval")
-                st.markdown("---")
-                st.markdown(result.raw)
+
+                # Single Unified SOP Agent
+                sop_agent = Agent(
+                    role="Senior SOP Specialist",
+                    goal="Accurately extract, summarize, and answer questions based on indexed SOP documents.",
+                    backstory="You are an expert technical auditor specializing in Standard Operating Procedures. "
+                              "You retrieve information directly from the SOP database using your tool and give concise, clear responses.",
+                    tools=[search_sop_database],
+                    llm=groq_llm,
+                    verbose=True
+                )
+
+                # Single Task
+                sop_task = Task(
+                    description=f"Answer the user query using the SOP Vector Search Tool: '{user_query}'",
+                    expected_output="A precise, structured answer referencing specific SOP facts and source files where applicable.",
+                    agent=sop_agent
+                )
+
+                # Execute Single Agent Crew
+                crew = Crew(
+                    agents=[sop_agent],
+                    tasks=[sop_task]
+                )
+
+                result = crew.kickoff()
+                response_text = str(result)
+
+                st.markdown(response_text)
+                st.session_state.messages.append({"role": "assistant", "content": response_text})
+
             except Exception as e:
                 st.error(f"Execution Error: {str(e)}")
