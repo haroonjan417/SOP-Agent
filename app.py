@@ -36,8 +36,37 @@ st.markdown("""
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
+        margin-bottom: 0px;
     }
     
+    /* Main Banner Team Card Styling */
+    .hero-team-card {
+        background-color: #1E293B;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-top: 10px;
+        margin-bottom: 25px;
+    }
+    .hero-leader {
+        color: #818CF8;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+    .hero-leader span {
+        color: #F8FAFC;
+        font-weight: 600;
+    }
+    .hero-members {
+        color: #94A3B8;
+        font-size: 0.9rem;
+    }
+    .hero-members span {
+        color: #CBD5E1;
+        font-weight: 500;
+    }
+
     /* Cards / Container Boxes */
     div[data-testid="stExpander"], div.stTextArea {
         background-color: #1E293B;
@@ -59,31 +88,20 @@ st.markdown("""
         opacity: 0.9;
         transform: translateY(-1px);
     }
-
-    /* Team Card Styling */
-    .team-card {
-        background-color: #0F172A;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 12px;
-        margin-top: 10px;
-    }
-    .team-leader {
-        color: #818CF8;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-    .team-member {
-        color: #94A3B8;
-        font-size: 0.9rem;
-        margin-left: 4px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- HEADER SECTION ---
 st.title("⚡ AI SOP Operations Agent")
 st.caption("Powered by CrewAI, Groq API, Dynamic Multi-Doc RAG & Streamlit")
+
+# --- TEAM ATTRIBUTION BANNER (UNDER TITLE) ---
+st.markdown("""
+<div class="hero-team-card">
+    <div class="hero-leader">👑 Team Leader: <span>Masood ur Rahman</span></div>
+    <div class="hero-members">🤝 Team Members: <span>M Haroon Jan &nbsp;•&nbsp; Fatima Ijaz &nbsp;•&nbsp; Aslam Afridi &nbsp;•&nbsp; Shakeel Ahmad &nbsp;•&nbsp; Sami Ur Rahman</span></div>
+</div>
+""", unsafe_allow_html=True)
 
 # --- TRACK SESSION STATE ---
 if "indexed_files_count" not in st.session_state:
@@ -134,24 +152,6 @@ with st.sidebar:
         st.markdown("**Active SOPs:**")
         for fname in st.session_state["indexed_file_names"]:
             st.markdown(f"- `{fname}`")
-
-    st.markdown("---")
-    
-    # --- TEAM ATTRIBUTION SECTION ---
-    st.markdown("### 👥 Project Team")
-    st.markdown("""
-    <div class="team-card">
-        <div class="team-leader">👑 Team Leader:</div>
-        <div style="color: #F8FAFC; font-weight: 600; margin-left: 4px;">Masood ur Rahman</div>
-        <hr style="border-color: #334155; margin: 8px 0;">
-        <div class="team-leader">🤝 Team Members:</div>
-        <div class="team-member">• M Haroon Jan</div>
-        <div class="team-member">• Fatima Ijaz</div>
-        <div class="team-member">• Aslam Afridi</div>
-        <div class="team-member">• Shakeel Ahmad</div>
-        <div class="team-member">• Sami Ur Rahman</div>
-    </div>
-    """, unsafe_allow_html=True)
 
 # --- MAIN APP INPUT SECTION ---
 st.markdown("### 🚨 Report an Operational Incident")
