@@ -1,3 +1,4 @@
+```text
 streamlit>=1.35.0
 crewai>=0.100.0
 crewai-tools>=0.2.0
@@ -8,3 +9,4 @@ sentence-transformers>=2.7.0
 pypdf>=4.0.0
 duckduckgo-search>=6.0.0
 fastembed
+groq>=0.30.0
