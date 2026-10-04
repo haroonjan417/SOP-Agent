@@ -1,7 +1,8 @@
 import os
 import streamlit as st
 from agent import run_sop_crew
-from tools import build_vectorstore_from_files
+from tools import build_vectorstore_from_files, query_sop_vectorstore
+from tasks import run_sop_multi_agent_workflow
 
 # --- MODERN UI PAGE CONFIG & STYLING ---
 st.set_page_config(
@@ -183,26 +184,24 @@ st.info("Example: *'5 crates of raw material arrived damaged at Loading Bay 2. P
 user_incident = st.text_area("Describe the operational issue or event:", height=120)
 
 if st.button("Analyze & Generate Action Plan", type="primary"):
-    if uploaded_sops and st.session_state["indexed_files_count"] == 0:
-        with st.spinner("Indexing uploaded SOP documents..."):
-            count = build_vectorstore_from_files(uploaded_sops)
-            st.session_state["indexed_files_count"] = count
-            st.session_state["indexed_file_names"] = [f.name for f in uploaded_sops]
-
     if not groq_api_key:
-        st.error("Missing Groq API key in secrets or sidebar.")
+        st.error("Missing Groq API key.")
     elif not user_incident.strip():
-        st.warning("Please provide an incident description.")
+        st.warning("Please describe the incident.")
     else:
-        os.environ["GROQ_API_KEY"] = groq_api_key
-        
-        with st.spinner("Agent evaluating incident and generating workflow..."):
+        with st.spinner("Multi-Agent System evaluating incident..."):
             try:
-                result = run_sop_crew(
-                    user_incident=user_incident, 
-                    api_key=groq_api_key, 
+                # Step 1: Retrieve context from RAG tool
+                retrieved_context = query_sop_vectorstore(user_incident)
+                
+                # Step 2: Execute Multi-Agent Workflow from tasks.py
+                result = run_sop_multi_agent_workflow(
+                    user_incident=user_incident,
+                    sop_context=retrieved_context,
+                    api_key=groq_api_key,
                     model_name=selected_model
                 )
+                
                 st.success("Action Plan Ready for Approval")
                 st.markdown("---")
                 st.markdown(result.raw)
